@@ -109,7 +109,7 @@ HWND setupWindow(HINSTANCE p_Instance, int p_Width, int p_Height)
 		p_Width, p_Height, 0, 0, p_Instance, 0);
 
 	if (hwnd == INVALID_HANDLE_VALUE)
-		MessageBox("Error creating Window.\n");
+		MessageBox(0, "Error creating Window.\n", "Error!", 0);
 	else
 		ShowWindow(hwnd, SW_SHOW);
 	return hwnd;
