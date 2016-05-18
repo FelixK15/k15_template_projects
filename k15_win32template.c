@@ -1,5 +1,4 @@
 #include <windows.h>
-#include <stdio.h>
 
 #pragma comment(lib, "kernel32.lib")
 #pragma comment(lib, "user32.lib")
@@ -110,7 +109,7 @@ HWND setupWindow(HINSTANCE p_Instance, int p_Width, int p_Height)
 		p_Width, p_Height, 0, 0, p_Instance, 0);
 
 	if (hwnd == INVALID_HANDLE_VALUE)
-		printf("Error creating Window.\n");
+		MessageBox("Error creating Window.\n");
 	else
 		ShowWindow(hwnd, SW_SHOW);
 	return hwnd;
