@@ -20,6 +20,7 @@ HDC backbufferDC = 0;
 HBITMAP backbufferBitmap = 0;
 uint32 screenWidth = 1024;
 uint32 screenHeight = 768;
+uint32 timePerFrameInMS = 16;
 
 void K15_WindowCreated(HWND p_HWND, UINT p_Message, WPARAM p_wParam, LPARAM p_lParam)
 {
@@ -125,7 +126,7 @@ HWND setupWindow(HINSTANCE p_Instance, int p_Width, int p_Height)
 uint32 getTimeInMilliseconds(LARGE_INTEGER p_PerformanceFrequency)
 {
 	LARGE_INTEGER appTime = {};
-	QueryPerformanceFrequency(&appTime);
+	QueryPerformanceCounter(&appTime);
 
 	appTime.QuadPart *= 1000; //to milliseconds
 
@@ -152,8 +153,25 @@ void swapBuffers(HWND p_HWND)
 	BitBlt(backbufferDC, 0, 0, screenWidth, screenHeight, backbufferDC, 0, 0, BLACKNESS);
 }
 
+void drawDeltaTime(uint32 p_DeltaTimeInMS)
+{
+	RECT textRect;
+	textRect.left = 70;
+	textRect.top = 70;
+	textRect.bottom = screenHeight;
+	textRect.right = screenWidth;
+
+	char messageBuffer[64];
+	SetTextColor(backbufferDC, RGB(255, 255, 255));
+	SetBkColor(backbufferDC, RGB(0, 0, 0));
+
+	sprintf_s(messageBuffer, 64, "MS: %d", p_DeltaTimeInMS);
+	DrawTextA(backbufferDC, messageBuffer, -1, &textRect, DT_LEFT | DT_TOP);
+}
+
 void doFrame(uint32 p_DeltaTimeInMS, HWND p_HWND)
 {
+	drawDeltaTime(p_DeltaTimeInMS);
 	swapBuffers(p_HWND);
 }
 
@@ -195,6 +213,9 @@ int CALLBACK WinMain(HINSTANCE hInstance,
 
 		timeFrameEnded = getTimeInMilliseconds(performanceFrequency);
 		deltaMs = timeFrameEnded - timeFrameStarted;
+
+		if (deltaMs < timePerFrameInMS)
+			Sleep(timePerFrameInMS - deltaMs);
 	}
 
 	return 0;
