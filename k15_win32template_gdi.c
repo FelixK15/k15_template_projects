@@ -15,6 +15,7 @@ typedef unsigned short uint16;
 typedef unsigned char uint8;
 
 typedef LRESULT(CALLBACK* WNDPROC)(HWND, UINT, WPARAM, LPARAM);
+void resizeBackbuffer(HWND p_HWND, uint32 p_Width, uint32 p_Height);
 
 HDC backbufferDC = 0;
 HBITMAP backbufferBitmap = 0;
@@ -52,6 +53,14 @@ void K15_MouseWheel(HWND p_HWND, UINT p_Message, WPARAM p_wParam, LPARAM p_lPara
 
 }
 
+void K15_WindowResized(HWND p_HWND, UINT p_Messaeg, WPARAM p_wParam, LPARAM p_lParam)
+{
+	WORD newWidth = (WORD)(p_lParam);
+	WORD newHeight = (WORD)(p_lParam >> 16);
+
+	resizeBackbuffer(p_HWND, newWidth, newHeight);
+}
+
 LRESULT CALLBACK K15_WNDPROC(HWND p_HWND, UINT p_Message, WPARAM p_wParam, LPARAM p_lParam)
 {
 	bool8 messageHandled = K15_FALSE;
@@ -73,6 +82,10 @@ LRESULT CALLBACK K15_WNDPROC(HWND p_HWND, UINT p_Message, WPARAM p_wParam, LPARA
 	case WM_SYSKEYDOWN:
 	case WM_SYSKEYUP:
 		K15_KeyInput(p_HWND, p_Message, p_wParam, p_lParam);
+		break;
+
+	case WM_SIZE:
+		K15_WindowResized(p_HWND, p_Message, p_wParam, p_lParam);
 		break;
 
 	case WM_LBUTTONUP:
@@ -133,13 +146,23 @@ uint32 getTimeInMilliseconds(LARGE_INTEGER p_PerformanceFrequency)
 	return (uint32)(appTime.QuadPart / p_PerformanceFrequency.QuadPart);
 }
 
+void resizeBackbuffer(HWND p_HWND, uint32 p_Width, uint32 p_Height)
+{
+	DeleteObject(backbufferBitmap);
+
+	HDC originalDC = GetDC(p_HWND);
+	backbufferBitmap = CreateCompatibleBitmap(originalDC, p_Width, p_Height);
+	screenWidth = p_Width;
+	screenHeight = p_Height;
+	
+	SelectObject(backbufferDC, backbufferBitmap);
+}
+
 void setup(HWND p_HWND)
 {
 	HDC originalDC = GetDC(p_HWND);
 	backbufferDC = CreateCompatibleDC(originalDC);
-	backbufferBitmap = CreateCompatibleBitmap(originalDC, screenWidth, screenHeight);
-
-	SelectObject(backbufferDC, backbufferBitmap);
+	resizeBackbuffer(p_HWND, screenWidth, screenHeight);
 }
 
 void swapBuffers(HWND p_HWND)
