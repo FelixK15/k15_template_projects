@@ -123,6 +123,7 @@ HWND setupWindow(HINSTANCE p_Instance, int p_Width, int p_Height)
 	wndClass.hInstance = p_Instance;
 	wndClass.lpszClassName = "K15_Win32Template";
 	wndClass.lpfnWndProc = K15_WNDPROC;
+	wndClass.hCursor = LoadCursor(NULL, IDC_ARROW);
 	RegisterClass(&wndClass);
 
 	HWND hwnd = CreateWindowA("K15_Win32Template", "Win32 Template",
