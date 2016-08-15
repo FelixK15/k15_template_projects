@@ -1,3 +1,5 @@
+#define _CRT_SECURE_NO_WARNINGS
+
 #include <windows.h>
 #include <stdio.h>
 
@@ -15,6 +17,27 @@ typedef unsigned short uint16;
 typedef unsigned char uint8;
 
 typedef LRESULT(CALLBACK* WNDPROC)(HWND, UINT, WPARAM, LPARAM);
+
+void printErrorToFile(const char* p_FileName)
+{
+	DWORD errorId = GetLastError();
+	char* textBuffer = 0;
+	DWORD writtenChars = FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER, 0, errorId, 
+		MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US), (LPSTR)&textBuffer, 512, 0);
+
+	if (writtenChars > 0)
+	{
+		FILE* file = fopen(p_FileName, "w");
+
+		if (file)
+		{
+			fwrite(textBuffer, writtenChars, 1, file);			
+			fflush(file);
+			fclose(file);
+		}
+	}
+}
+
 void resizeBackbuffer(HWND p_HWND, uint32 p_Width, uint32 p_Height);
 
 HDC backbufferDC = 0;

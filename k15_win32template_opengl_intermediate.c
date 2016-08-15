@@ -1,10 +1,13 @@
 #define _CRT_SECURE_NO_WARNINGS
 
 #include <windows.h>
+#include <GL/GL.h>
 #include <stdio.h>
 
 #pragma comment(lib, "kernel32.lib")
 #pragma comment(lib, "user32.lib")
+#pragma comment(lib, "opengl32.lib")
+#pragma comment(lib, "gdi32.lib")
 
 #define K15_FALSE 0
 #define K15_TRUE 1
@@ -67,6 +70,14 @@ void K15_MouseWheel(HWND p_HWND, UINT p_Message, WPARAM p_wParam, LPARAM p_lPara
 
 }
 
+void K15_WindowResized(HWND p_HWND, UINT p_Message, WPARAM p_wParam, LPARAM p_lParam)
+{
+	RECT clientRect = {0};
+	GetClientRect(p_HWND, &clientRect);
+
+	glViewport(0, 0, clientRect.right - clientRect.left, clientRect.bottom - clientRect.top);
+}
+
 LRESULT CALLBACK K15_WNDPROC(HWND p_HWND, UINT p_Message, WPARAM p_wParam, LPARAM p_lParam)
 {
 	bool8 messageHandled = K15_FALSE;
@@ -108,6 +119,11 @@ LRESULT CALLBACK K15_WNDPROC(HWND p_HWND, UINT p_Message, WPARAM p_wParam, LPARA
 	case WM_MOUSEWHEEL:
 		K15_MouseWheel(p_HWND, p_Message, p_wParam, p_lParam);
 		break;
+
+	case WM_SIZE:
+		K15_WindowResized(p_HWND, p_Message, p_wParam, p_lParam);
+		break;
+
 	}
 
 	if (messageHandled == K15_FALSE)
@@ -149,14 +165,53 @@ uint32 getTimeInMilliseconds(LARGE_INTEGER p_PerformanceFrequency)
 	return (uint32)(appTime.QuadPart / p_PerformanceFrequency.QuadPart);
 }
 
-void setup()
+void setup(HWND hwnd)
 {
+	PIXELFORMATDESCRIPTOR pfd =
+		{
+			sizeof(PIXELFORMATDESCRIPTOR),
+			1,
+			PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER,    //Flags
+			PFD_TYPE_RGBA,            //The kind of framebuffer. RGBA or palette.
+			32,                        //Colordepth of the framebuffer.
+			0, 0, 0, 0, 0, 0,
+			0,
+			0,
+			0,
+			0, 0, 0, 0,
+			24,                        //Number of bits for the depthbuffer
+			8,                        //Number of bits for the stencilbuffer
+			0,                        //Number of Aux buffers in the framebuffer.
+			PFD_MAIN_PLANE,
+			0,
+			0, 0, 0
+		};
 
+	HDC mainDC = GetDC(hwnd);
+
+	int pixelFormat = ChoosePixelFormat(mainDC, &pfd); 
+	SetPixelFormat(mainDC,pixelFormat, &pfd);
+
+	HGLRC glContext = wglCreateContext(mainDC);
+
+	wglMakeCurrent(mainDC, glContext);
+	
+	//set default gl state
+	glShadeModel(GL_SMOOTH);
+
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
 }
 
-void doFrame(uint32 p_DeltaTimeInMS)
+void doFrame(uint32 p_DeltaTimeInMS, HWND hwnd)
 {
+	HDC mainDC = GetDC(hwnd);
 
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	SwapBuffers(mainDC);
 }
 
 int CALLBACK WinMain(HINSTANCE hInstance,
@@ -171,7 +226,7 @@ int CALLBACK WinMain(HINSTANCE hInstance,
 	if (hwnd == INVALID_HANDLE_VALUE)
 		return -1;
 
-	setup();
+	setup(hwnd);
 
 	uint32 timeFrameStarted = 0;
 	uint32 timeFrameEnded = 0;
@@ -194,7 +249,7 @@ int CALLBACK WinMain(HINSTANCE hInstance,
 		}
 
 
-		doFrame(deltaMs);
+		doFrame(deltaMs, hwnd);
 
 		timeFrameEnded = getTimeInMilliseconds(performanceFrequency);
 		deltaMs = timeFrameEnded - timeFrameStarted;
