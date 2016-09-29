@@ -1,7 +1,7 @@
 # What are these files used for? (ELI5)
 This is a collection of template files that I use when I want to quickly prototype new ideas.
 They provide some basic boilerplate code for certain scenarios and should help to
-quickly start prototyping eg. without worrying about window creation and input handling.
+quickly start prototyping without worrying about window creation and input handling.
 
 # How can I starting building prototypes using these files?
 
