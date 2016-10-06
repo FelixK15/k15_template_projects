@@ -37,6 +37,14 @@ void printErrorToFile(const char* p_FileName)
 	}
 }
 
+void allocateDebugConsole()
+{
+	AllocConsole();
+	AttachConsole(ATTACH_PARENT_PROCESS);
+	freopen("CONOUT$", "w", stdout);
+}
+
+
 void K15_WindowCreated(HWND p_HWND, UINT p_Message, WPARAM p_wParam, LPARAM p_lParam)
 {
 
@@ -151,7 +159,7 @@ uint32 getTimeInMilliseconds(LARGE_INTEGER p_PerformanceFrequency)
 
 void setup()
 {
-
+	allocateDebugConsole();
 }
 
 void doFrame(uint32 p_DeltaTimeInMS)

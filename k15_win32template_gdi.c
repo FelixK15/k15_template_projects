@@ -38,6 +38,13 @@ void printErrorToFile(const char* p_FileName)
 	}
 }
 
+void allocateDebugConsole()
+{
+	AllocConsole();
+	AttachConsole(ATTACH_PARENT_PROCESS);
+	freopen("CONOUT$", "w", stdout);
+}
+
 void resizeBackbuffer(HWND p_HWND, uint32 p_Width, uint32 p_Height);
 
 HDC backbufferDC = 0;
@@ -184,6 +191,8 @@ void resizeBackbuffer(HWND p_HWND, uint32 p_Width, uint32 p_Height)
 
 void setup(HWND p_HWND)
 {
+	allocateDebugConsole();
+	
 	HDC originalDC = GetDC(p_HWND);
 	backbufferDC = CreateCompatibleDC(originalDC);
 	resizeBackbuffer(p_HWND, screenWidth, screenHeight);
