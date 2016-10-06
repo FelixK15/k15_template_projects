@@ -2,8 +2,17 @@
 echo Searching for Visual Studio installation...
 setlocal enableextensions enabledelayedexpansion
 
+set PROJECT_NAME=k15_win32template
+set C_FILE_NAME=k15_win32template.c
+
+set COMPILER_OPTIONS=/nologo /Od /TC /MTd /W3 /Od /Gm- /Z7 /Fe!PROJECT_NAME!.exe
+set LINKER_OPTIONS=/PDB:!PROJECT_NAME!.pdb
+
+set CL_OPTIONS=!COMPILER_OPTIONS! /link !LINKER_OPTIONS!
+
 set FOUND_PATH=0
 set VS_PATH=
+
 ::check whether this is 64bit windows or not
 reg Query "HKLM\Hardware\Description\System\CentralProcessor\0" | find /i "x86" > NUL && set OS=32BIT || set OS=64BIT
 
@@ -41,8 +50,7 @@ IF !FOUND_PATH!==0 (
 	echo Starting build process...
 	set VCVARS_PATH="!VS_PATH!..\..\VC\vcvarsall.bat"
 	set CL_PATH="!VS_PATH!..\..\VC\bin\cl.exe"
-	set CL_OPTIONS=/nologo /Od /TP /Fek15_win32_template.exe /MTd /TP /W3 /WX /Od /Gm- /Z7 /link /PDB:k15_win32_template.pdb
-	set BUILD_COMMAND=!CL_PATH! k15_win32template.c !CL_OPTIONS!
+	set BUILD_COMMAND=!CL_PATH! !C_FILE_NAME! !CL_OPTIONS!
 	call !VCVARS_PATH!
 	call !BUILD_COMMAND!
 ) 

@@ -120,7 +120,7 @@ LRESULT CALLBACK K15_WNDPROC(HWND p_HWND, UINT p_Message, WPARAM p_wParam, LPARA
 
 HWND setupWindow(HINSTANCE p_Instance, int p_Width, int p_Height)
 {
-	WNDCLASS wndClass = {};
+	WNDCLASS wndClass = {0};
 	wndClass.style = CS_HREDRAW | CS_OWNDC | CS_VREDRAW;
 	wndClass.hInstance = p_Instance;
 	wndClass.lpszClassName = "K15_Win32Template";
@@ -141,7 +141,7 @@ HWND setupWindow(HINSTANCE p_Instance, int p_Width, int p_Height)
 
 uint32 getTimeInMilliseconds(LARGE_INTEGER p_PerformanceFrequency)
 {
-	LARGE_INTEGER appTime = {};
+	LARGE_INTEGER appTime = {0};
 	QueryPerformanceFrequency(&appTime);
 
 	appTime.QuadPart *= 1000; //to milliseconds
@@ -178,7 +178,7 @@ int CALLBACK WinMain(HINSTANCE hInstance,
 	uint32 deltaMs = 0;
 
 	bool8 loopRunning = K15_TRUE;
-	MSG msg = {};
+	MSG msg = {0};
 
 	while (loopRunning)
 	{
