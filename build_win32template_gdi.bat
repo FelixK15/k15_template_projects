@@ -55,7 +55,7 @@ IF !FOUND_PATH!==0 (
 		call !VCVARS_PATH! x86 >nul 2>nul
 	)
 
-	set CL_PATH="!VS_PATH!cl.exe"
+	set CL_PATH="cl.exe"
 	set CL_OPTIONS=/nologo /Fe!EXECUTABLE_NAME! /MD /TC /W3 /Od /Zi
 	set BUILD_COMMAND=!CL_PATH! !C_FILE_NAME! !CL_OPTIONS!
 	call !BUILD_COMMAND!
