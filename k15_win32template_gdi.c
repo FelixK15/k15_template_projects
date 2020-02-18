@@ -18,7 +18,7 @@ typedef unsigned char uint8;
 
 typedef LRESULT(CALLBACK* WNDPROC)(HWND, UINT, WPARAM, LPARAM);
 
-void printErrorToFile(const char* p_FileName)
+void printErrorToFile(const char* pFileName)
 {
 	DWORD errorId = GetLastError();
 	char* textBuffer = 0;
@@ -27,7 +27,7 @@ void printErrorToFile(const char* p_FileName)
 
 	if (writtenChars > 0)
 	{
-		FILE* file = fopen(p_FileName, "w");
+		FILE* file = fopen(pFileName, "w");
 
 		if (file)
 		{
