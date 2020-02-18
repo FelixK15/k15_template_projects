@@ -88,7 +88,7 @@ void createBackBuffer(HWND hwnd, int width, int height)
 
 	pBackBufferBitmapInfo->bmiHeader.biSize = sizeof(BITMAPINFO);
 	pBackBufferBitmapInfo->bmiHeader.biWidth = width;
-	pBackBufferBitmapInfo->bmiHeader.biHeight = height;
+	pBackBufferBitmapInfo->bmiHeader.biHeight = -(int)height;
 	pBackBufferBitmapInfo->bmiHeader.biPlanes = 1;
 	pBackBufferBitmapInfo->bmiHeader.biBitCount = 8;
 	pBackBufferBitmapInfo->bmiHeader.biCompression = BI_RGB;
@@ -96,7 +96,7 @@ void createBackBuffer(HWND hwnd, int width, int height)
 	pBackBufferBitmapInfo = malloc( sizeof(BITMAPINFO) );
 	pBackBufferBitmapInfo->bmiHeader.biSize = sizeof(BITMAPINFO);
 	pBackBufferBitmapInfo->bmiHeader.biWidth = width;
-	pBackBufferBitmapInfo->bmiHeader.biHeight = height;
+	pBackBufferBitmapInfo->bmiHeader.biHeight = -(int)height;
 	pBackBufferBitmapInfo->bmiHeader.biPlanes = 1;
 	pBackBufferBitmapInfo->bmiHeader.biBitCount = 32;
 	pBackBufferBitmapInfo->bmiHeader.biCompression = BI_RGB;
