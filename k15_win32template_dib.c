@@ -1,13 +1,13 @@
 #define _CRT_SECURE_NO_WARNINGS
 
+//#define K15_GREYSCALE
+
 #include <windows.h>
-#include <GL/GL.h>
 #include <stdio.h>
 
 #pragma comment(lib, "kernel32.lib")
 #pragma comment(lib, "user32.lib")
-#pragma comment(lib, "opengl32.lib")
-#pragma comment(lib, "gdi32.lib")
+#pragma comment(lib, "Gdi32.lib")
 
 #define K15_FALSE 0
 #define K15_TRUE 1
@@ -47,6 +47,72 @@ void allocateDebugConsole()
 	freopen("CONOUT$", "w", stdout);
 }
 
+#ifdef K15_GREYSCALE
+uint8* pBackBufferPixels = 0;
+#else
+uint32* pBackBufferPixels = 0;
+#endif
+
+BITMAPINFO* pBackBufferBitmapInfo = 0;
+HBITMAP backBufferBitmap = 0;
+
+int screenWidth = 800;
+int screenHeight = 600;
+
+void createBackBuffer(HWND hwnd, int width, int height)
+{		
+	if (pBackBufferBitmapInfo != NULL)
+	{
+		free(pBackBufferBitmapInfo);
+		pBackBufferBitmapInfo = NULL;
+		pBackBufferPixels = NULL;
+	}
+
+	if (backBufferBitmap != NULL)
+	{
+		DeleteObject(backBufferBitmap);
+		backBufferBitmap = NULL;
+	}
+
+#ifdef K15_GREYSCALE
+	pBackBufferBitmapInfo = malloc( sizeof(BITMAPINFO) + sizeof(RGBQUAD) * 256 );
+	RGBQUAD* pRGBValues = (RGBQUAD*)((uint8*)pBackBufferBitmapInfo + sizeof(BITMAPINFO));
+
+	for(int i = 0; i < 256; ++i)
+	{
+		pRGBValues[i].rgbRed 	= (uint8)i;
+		pRGBValues[i].rgbBlue 	= (uint8)i;
+		pRGBValues[i].rgbGreen 	= (uint8)i;
+		pRGBValues[i].rgbReserved = 0;
+	}
+
+	pBackBufferBitmapInfo->bmiHeader.biSize = sizeof(BITMAPINFO);
+	pBackBufferBitmapInfo->bmiHeader.biWidth = width;
+	pBackBufferBitmapInfo->bmiHeader.biHeight = height;
+	pBackBufferBitmapInfo->bmiHeader.biPlanes = 1;
+	pBackBufferBitmapInfo->bmiHeader.biBitCount = 8;
+	pBackBufferBitmapInfo->bmiHeader.biCompression = BI_RGB;
+#else
+	pBackBufferBitmapInfo = malloc( sizeof(BITMAPINFO) );
+	pBackBufferBitmapInfo->bmiHeader.biSize = sizeof(BITMAPINFO);
+	pBackBufferBitmapInfo->bmiHeader.biWidth = width;
+	pBackBufferBitmapInfo->bmiHeader.biHeight = height;
+	pBackBufferBitmapInfo->bmiHeader.biPlanes = 1;
+	pBackBufferBitmapInfo->bmiHeader.biBitCount = 32;
+	pBackBufferBitmapInfo->bmiHeader.biCompression = BI_RGB;
+	//FK: XRGB
+#endif
+
+	HDC deviceContext = GetDC(hwnd);
+	backBufferBitmap = CreateDIBSection( deviceContext, pBackBufferBitmapInfo, DIB_RGB_COLORS, &pBackBufferPixels, NULL, 0 );   
+	if (backBufferBitmap == NULL && pBackBufferPixels == NULL)
+	{
+		MessageBoxA(0, "Error during CreateDIBSection.", "Error!", 0);
+	}
+
+	screenWidth = width;
+	screenHeight = height;
+}
 
 void K15_WindowCreated(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
 {
@@ -80,10 +146,10 @@ void K15_MouseWheel(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
 
 void K15_WindowResized(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
 {
-	RECT clientRect = {0};
-	GetClientRect(hwnd, &clientRect);
+	WORD newWidth = (WORD)(lparam);
+	WORD newHeight = (WORD)(lparam >> 16);
 
-	glViewport(0, 0, clientRect.right - clientRect.left, clientRect.bottom - clientRect.top);
+	createBackBuffer(hwnd, newWidth, newHeight);
 }
 
 LRESULT CALLBACK K15_WNDPROC(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
@@ -131,7 +197,6 @@ LRESULT CALLBACK K15_WNDPROC(HWND hwnd, UINT message, WPARAM wparam, LPARAM lpar
 	case WM_SIZE:
 		K15_WindowResized(hwnd, message, wparam, lparam);
 		break;
-
 	}
 
 	if (messageHandled == K15_FALSE)
@@ -142,11 +207,11 @@ LRESULT CALLBACK K15_WNDPROC(HWND hwnd, UINT message, WPARAM wparam, LPARAM lpar
 	return 0;
 }
 
-HWND setupWindow(HINSTANCE p_Instance, int p_Width, int p_Height)
+HWND setupWindow(HINSTANCE instance, int width, int height)
 {
 	WNDCLASS wndClass = {0};
 	wndClass.style = CS_HREDRAW | CS_OWNDC | CS_VREDRAW;
-	wndClass.hInstance = p_Instance;
+	wndClass.hInstance = instance;
 	wndClass.lpszClassName = "K15_Win32Template";
 	wndClass.lpfnWndProc = K15_WNDPROC;
 	wndClass.hCursor = LoadCursor(NULL, IDC_ARROW);
@@ -154,72 +219,50 @@ HWND setupWindow(HINSTANCE p_Instance, int p_Width, int p_Height)
 
 	HWND hwnd = CreateWindowA("K15_Win32Template", "Win32 Template",
 		WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT,
-		p_Width, p_Height, 0, 0, p_Instance, 0);
+		width, height, 0, 0, instance, 0);
 
 	if (hwnd == INVALID_HANDLE_VALUE)
+	{
 		MessageBox(0, "Error creating Window.\n", "Error!", 0);
+	}
 	else
+	{
 		ShowWindow(hwnd, SW_SHOW);
+		createBackBuffer(hwnd, width, height);
+	}
 	return hwnd;
 }
 
-uint32 getTimeInMilliseconds(LARGE_INTEGER p_PerformanceFrequency)
+uint32 getTimeInMilliseconds(LARGE_INTEGER PerformanceFrequency)
 {
 	LARGE_INTEGER appTime = {0};
 	QueryPerformanceFrequency(&appTime);
 
 	appTime.QuadPart *= 1000; //to milliseconds
 
-	return (uint32)(appTime.QuadPart / p_PerformanceFrequency.QuadPart);
+	return (uint32)(appTime.QuadPart / PerformanceFrequency.QuadPart);
 }
 
-void setup(HWND hwnd)
+void setup()
 {
-	PIXELFORMATDESCRIPTOR pfd =
-		{
-			sizeof(PIXELFORMATDESCRIPTOR),
-			1,
-			PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER,    //Flags
-			PFD_TYPE_RGBA,            //The kind of framebuffer. RGBA or palette.
-			32,                        //Colordepth of the framebuffer.
-			0, 0, 0, 0, 0, 0,
-			0,
-			0,
-			0,
-			0, 0, 0, 0,
-			24,                        //Number of bits for the depthbuffer
-			8,                        //Number of bits for the stencilbuffer
-			0,                        //Number of Aux buffers in the framebuffer.
-			PFD_MAIN_PLANE,
-			0,
-			0, 0, 0
-		};
-
-	HDC mainDC = GetDC(hwnd);
-
-	int pixelFormat = ChoosePixelFormat(mainDC, &pfd); 
-	SetPixelFormat(mainDC,pixelFormat, &pfd);
-
-	HGLRC glContext = wglCreateContext(mainDC);
-
-	wglMakeCurrent(mainDC, glContext);
-	
-	//set default gl state
-	glShadeModel(GL_SMOOTH);
-
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
-
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
 }
 
-void doFrame(uint32 p_DeltaTimeInMS, HWND hwnd)
+void drawBackBuffer(HWND hwnd)
 {
-	HDC mainDC = GetDC(hwnd);
+	HDC deviceContext = GetDC( hwnd );
+	StretchDIBits( deviceContext, 0, 0, screenWidth, screenHeight, 0, 0, screenWidth, screenHeight, 
+		pBackBufferPixels, pBackBufferBitmapInfo, DIB_RGB_COLORS, SRCCOPY );  
 
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	SwapBuffers(mainDC);
+#ifdef K15_GREYSCALE
+	memset(pBackBufferPixels, 0, screenWidth * screenHeight);
+#else
+	memset(pBackBufferPixels, 0, screenWidth * screenHeight * sizeof(int));
+#endif
+}
+
+void doFrame(uint32 DeltaTimeInMS)
+{
+
 }
 
 int CALLBACK WinMain(HINSTANCE hInstance,
@@ -231,12 +274,14 @@ int CALLBACK WinMain(HINSTANCE hInstance,
 
 	allocateDebugConsole();
 
-	HWND hwnd = setupWindow(hInstance, 1024, 768);
+	HWND hwnd = setupWindow(hInstance, 800, 600);
 
 	if (hwnd == INVALID_HANDLE_VALUE)
+	{
 		return -1;
+	}
 
-	setup(hwnd);
+	setup();
 
 	uint32 timeFrameStarted = 0;
 	uint32 timeFrameEnded = 0;
@@ -266,11 +311,14 @@ int CALLBACK WinMain(HINSTANCE hInstance,
 			break;
 		}
 
-		doFrame(deltaMs, hwnd);
+		doFrame(deltaMs);
+		drawBackBuffer(hwnd);
 
 		timeFrameEnded = getTimeInMilliseconds(performanceFrequency);
 		deltaMs = timeFrameEnded - timeFrameStarted;
 	}
+
+	DestroyWindow(hwnd);
 
 	return 0;
 }

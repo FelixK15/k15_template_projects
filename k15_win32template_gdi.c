@@ -45,7 +45,7 @@ void allocateDebugConsole()
 	freopen("CONOUT$", "w", stdout);
 }
 
-void resizeBackbuffer(HWND p_HWND, uint32 p_Width, uint32 p_Height);
+void resizeBackbuffer(HWND hwnd, uint32 p_Width, uint32 p_Height);
 
 HDC backbufferDC = 0;
 HBITMAP backbufferBitmap = 0;
@@ -53,56 +53,56 @@ uint32 screenWidth = 1024;
 uint32 screenHeight = 768;
 uint32 timePerFrameInMS = 16;
 
-void K15_WindowCreated(HWND p_HWND, UINT p_Message, WPARAM p_wParam, LPARAM p_lParam)
+void K15_WindowCreated(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
 {
 
 }
 
-void K15_WindowClosed(HWND p_HWND, UINT p_Message, WPARAM p_wParam, LPARAM p_lParam)
+void K15_WindowClosed(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
 {
 
 }
 
-void K15_KeyInput(HWND p_HWND, UINT p_Message, WPARAM p_wParam, LPARAM p_lParam)
+void K15_KeyInput(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
 {
 
 }
 
-void K15_MouseButtonInput(HWND p_HWND, UINT p_Message, WPARAM p_wParam, LPARAM p_lParam)
+void K15_MouseButtonInput(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
 {
 
 }
 
-void K15_MouseMove(HWND p_HWND, UINT p_Message, WPARAM p_wParam, LPARAM p_lParam)
+void K15_MouseMove(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
 {
 
 }
 
-void K15_MouseWheel(HWND p_HWND, UINT p_Message, WPARAM p_wParam, LPARAM p_lParam)
+void K15_MouseWheel(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
 {
 
 }
 
-void K15_WindowResized(HWND p_HWND, UINT p_Messaeg, WPARAM p_wParam, LPARAM p_lParam)
+void K15_WindowResized(HWND hwnd, UINT p_Messaeg, WPARAM wparam, LPARAM lparam)
 {
-	WORD newWidth = (WORD)(p_lParam);
-	WORD newHeight = (WORD)(p_lParam >> 16);
+	WORD newWidth = (WORD)(lparam);
+	WORD newHeight = (WORD)(lparam >> 16);
 
-	resizeBackbuffer(p_HWND, newWidth, newHeight);
+	resizeBackbuffer(hwnd, newWidth, newHeight);
 }
 
-LRESULT CALLBACK K15_WNDPROC(HWND p_HWND, UINT p_Message, WPARAM p_wParam, LPARAM p_lParam)
+LRESULT CALLBACK K15_WNDPROC(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
 {
 	bool8 messageHandled = K15_FALSE;
 
-	switch (p_Message)
+	switch (message)
 	{
 	case WM_CREATE:
-		K15_WindowCreated(p_HWND, p_Message, p_wParam, p_lParam);
+		K15_WindowCreated(hwnd, message, wparam, lparam);
 		break;
 
 	case WM_CLOSE:
-		K15_WindowClosed(p_HWND, p_Message, p_wParam, p_lParam);
+		K15_WindowClosed(hwnd, message, wparam, lparam);
 		PostQuitMessage(0);
 		messageHandled = K15_TRUE;
 		break;
@@ -111,11 +111,11 @@ LRESULT CALLBACK K15_WNDPROC(HWND p_HWND, UINT p_Message, WPARAM p_wParam, LPARA
 	case WM_KEYUP:
 	case WM_SYSKEYDOWN:
 	case WM_SYSKEYUP:
-		K15_KeyInput(p_HWND, p_Message, p_wParam, p_lParam);
+		K15_KeyInput(hwnd, message, wparam, lparam);
 		break;
 
 	case WM_SIZE:
-		K15_WindowResized(p_HWND, p_Message, p_wParam, p_lParam);
+		K15_WindowResized(hwnd, message, wparam, lparam);
 		break;
 
 	case WM_LBUTTONUP:
@@ -126,21 +126,21 @@ LRESULT CALLBACK K15_WNDPROC(HWND p_HWND, UINT p_Message, WPARAM p_wParam, LPARA
 	case WM_RBUTTONDOWN:
 	case WM_MBUTTONDOWN:
 	case WM_XBUTTONDOWN:
-		K15_MouseButtonInput(p_HWND, p_Message, p_wParam, p_lParam);
+		K15_MouseButtonInput(hwnd, message, wparam, lparam);
 		break;
 
 	case WM_MOUSEMOVE:
-		K15_MouseMove(p_HWND, p_Message, p_wParam, p_lParam);
+		K15_MouseMove(hwnd, message, wparam, lparam);
 		break;
 
 	case WM_MOUSEWHEEL:
-		K15_MouseWheel(p_HWND, p_Message, p_wParam, p_lParam);
+		K15_MouseWheel(hwnd, message, wparam, lparam);
 		break;
 	}
 
 	if (messageHandled == K15_FALSE)
 	{
-		return DefWindowProc(p_HWND, p_Message, p_wParam, p_lParam);
+		return DefWindowProc(hwnd, message, wparam, lparam);
 	}
 
 	return 0;
@@ -177,11 +177,11 @@ uint32 getTimeInMilliseconds(LARGE_INTEGER p_PerformanceFrequency)
 	return (uint32)(appTime.QuadPart / p_PerformanceFrequency.QuadPart);
 }
 
-void resizeBackbuffer(HWND p_HWND, uint32 p_Width, uint32 p_Height)
+void resizeBackbuffer(HWND hwnd, uint32 p_Width, uint32 p_Height)
 {
 	DeleteObject(backbufferBitmap);
 
-	HDC originalDC = GetDC(p_HWND);
+	HDC originalDC = GetDC(hwnd);
 	backbufferBitmap = CreateCompatibleBitmap(originalDC, p_Width, p_Height);
 	screenWidth = p_Width;
 	screenHeight = p_Height;
@@ -189,18 +189,16 @@ void resizeBackbuffer(HWND p_HWND, uint32 p_Width, uint32 p_Height)
 	SelectObject(backbufferDC, backbufferBitmap);
 }
 
-void setup(HWND p_HWND)
-{
-	allocateDebugConsole();
-	
-	HDC originalDC = GetDC(p_HWND);
+void setup(HWND hwnd)
+{	
+	HDC originalDC = GetDC(hwnd);
 	backbufferDC = CreateCompatibleDC(originalDC);
-	resizeBackbuffer(p_HWND, screenWidth, screenHeight);
+	resizeBackbuffer(hwnd, screenWidth, screenHeight);
 }
 
-void swapBuffers(HWND p_HWND)
+void swapBuffers(HWND hwnd)
 {
-	HDC originalDC = GetDC(p_HWND);
+	HDC originalDC = GetDC(hwnd);
 	
 	//blit to front buffer
 	BitBlt(originalDC, 0, 0, screenWidth, screenHeight, backbufferDC, 0, 0, SRCCOPY);
@@ -225,10 +223,10 @@ void drawDeltaTime(uint32 p_DeltaTimeInMS)
 	DrawTextA(backbufferDC, messageBuffer, -1, &textRect, DT_LEFT | DT_TOP);
 }
 
-void doFrame(uint32 p_DeltaTimeInMS, HWND p_HWND)
+void doFrame(uint32 p_DeltaTimeInMS, HWND hwnd)
 {
 	drawDeltaTime(p_DeltaTimeInMS);
-	swapBuffers(p_HWND);
+	swapBuffers(hwnd);
 }
 
 int CALLBACK WinMain(HINSTANCE hInstance,
@@ -238,10 +236,14 @@ int CALLBACK WinMain(HINSTANCE hInstance,
 	LARGE_INTEGER performanceFrequency;
 	QueryPerformanceFrequency(&performanceFrequency);
 
+	allocateDebugConsole();
+
 	HWND hwnd = setupWindow(hInstance, screenWidth, screenHeight);
 
 	if (hwnd == INVALID_HANDLE_VALUE)
+	{
 		return -1;
+	}
 
 	setup(hwnd);
 
@@ -256,13 +258,21 @@ int CALLBACK WinMain(HINSTANCE hInstance,
 	{
 		timeFrameStarted = getTimeInMilliseconds(performanceFrequency);
 
-		while (PeekMessage(&msg, hwnd, 0, 0, PM_REMOVE) > 0)
+		while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE) > 0)
 		{
+			if (msg.message == WM_QUIT)
+			{
+				loopRunning = K15_FALSE;
+				break;
+			}
+
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
+		}
 
-			if (msg.message == WM_QUIT)
-				loopRunning = K15_FALSE;
+		if (!loopRunning)
+		{
+			break;
 		}
 
 		doFrame(deltaMs, hwnd);
@@ -270,9 +280,10 @@ int CALLBACK WinMain(HINSTANCE hInstance,
 		timeFrameEnded = getTimeInMilliseconds(performanceFrequency);
 		deltaMs = timeFrameEnded - timeFrameStarted;
 
-		if (deltaMs < timePerFrameInMS)
-			Sleep(timePerFrameInMS - deltaMs);
+		Sleep(timePerFrameInMS - deltaMs);
 	}
+
+	DestroyWindow(hwnd);
 
 	return 0;
 }
