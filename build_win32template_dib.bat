@@ -63,7 +63,7 @@ IF %OS%==32BIT (
 
 ::First try to find the visual studio installation via vswhere (AFAIK this is the only way for VS2022 and upward :( )
 IF exist !VS_WHERE_PATH! (
-	set VS_WHERE_COMMAND=!VS_WHERE_PATH! -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
+	set VS_WHERE_COMMAND=!VS_WHERE_PATH! -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
 	FOR /f "delims=" %%i IN ('!VS_WHERE_COMMAND!') do set VS_PATH=%%i\
 
 	if "!VS_PATH!"=="" (
